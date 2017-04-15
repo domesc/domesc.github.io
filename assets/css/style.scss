@@ -4,16 +4,16 @@
 @import "{{ site.theme }}";
 
 nav {
-text-align:center;
+    text-align:center;
 }
 
 nav li {
-display:inline;
+    display:inline;
 }
 
 nav a {
-text-decoration:none;
-padding:0 30px; /* variable width */
+    text-decoration:none;
+    padding:0 30px; /* variable width */
 }
 
 nav ul, footer ul {
@@ -28,28 +28,34 @@ nav ul li, footer ul li {
 }
 a {
     text-decoration: none;
+    color: #1E90FF;
+}
+a.menu {
     color: #999;
+}
+a.blogListTitle {
+    color: #222222;
 }
 a:hover {
     text-decoration: underline;
 }
 h1 {
-    font-size: 3em;
+    //font-size: xx-large;
     font-family:'Helvetica', 'Arial', 'Sans-Serif';
 }
 p {
-    font-size: 1.5em;
+    font-size: medium;
     line-height: 1.4em;
     color: #333;
 }
 footer {
-    border-top: 1px solid #d5d5d5;
-    font-size: .8em;
+    border-top: small solid #d5d5d5;
+    font-size: small;
 }
 
 ul.posts {
     margin: 20px auto 40px;
-    font-size: 1.5em;
+    font-size: medium;
 }
 
 ul.posts li {
