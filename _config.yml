@@ -13,11 +13,11 @@
 # you will see them accessed via {{ site.title }}, {{ site.email }}, and so on.
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
-title: domesc's Scala blog
+title: domesc tech blog
 email: your-email@domain.com
 description: > # this means to ignore newlines until "baseurl:"
-  A blog to explore Scala features and functional programming.
-baseurl: "/blog" # the subpath of your site, e.g. /blog
+  “Life is like riding a bicycle. To keep your balance you must keep moving.” – Albert Einstein
+#baseurl: "" # the subpath of your site, e.g. /blog
 url: "https://domesc.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 #twitter_username: jekyllrb
 github_username:  domesc
