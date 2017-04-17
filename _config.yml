@@ -1,1 +1,54 @@
-theme: jekyll-theme-slate
+# Build settings
+permalink   : /blog/:year/:title/
+markdown    : kramdown
+highlighter : pygments
+gems: [jekyll-paginate]
+
+paginate: 3
+paginate_path: "/blog/page/:num/"
+comments: true
+
+source: source
+destination: _site
+sass:
+  sass_dir: _scss
+  style: compressed # expanded
+
+# SEO settings
+title: domesc blog
+description: ""
+keywords: "Jekyll, theme, free, download, SEO, blog, web"
+url: https://domesc.github.io/
+baseurl: "/domesc"
+#baseurl: ""
+
+# google_analytics: UA-52446115-1
+repo: http://github.com/domesc
+disqus_shortname: "domesc"
+disqus_site_shortname: "domesc.github.io"
+
+# Author settings
+author:
+  name      : Domenico Scarmozzino
+  job       : Software and Data Engineer
+  bio       : "Enthusiast performance, responsive design and usability, always looking for the best project and good coffee."
+  thumb     : /images/author.png
+  email     :
+  url       : http://domesc.github.io
+  github    : http://github.com/domesc
+#  twitter   : http://twitter.com/nandomoreirame
+#  facebook  : http://facebook.com/fernando.dev
+  linkedin  : https://www.linkedin.com/in/domenico-scarmozzino-06731345
+
+# navbar pages
+navbar:
+  - slug: about
+    title: About
+  # - slug: resume
+  #   title: Resume
+  # - slug: skills
+  #   title: Skills
+  - slug: blog
+    title: Blog
+
+exclude: ["gulp", "node_modules", "bower", "bower_components", "config.rb", "src", "Gemfile", "Gemfile.lock", ".rvmrc", ".rbenv-version", "package.json", "gulpfile.js", "README.md", "Rakefile", "changelog.md"]
