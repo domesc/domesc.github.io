@@ -19,7 +19,7 @@ title: domesc blog
 description: ""
 keywords: "Jekyll, theme, free, download, SEO, blog, web"
 url: https://domesc.github.io/
-baseurl: "/domesc"
+baseurl: "/home"
 #baseurl: ""
 
 # google_analytics: UA-52446115-1
@@ -31,7 +31,7 @@ disqus_site_shortname: "domesc.github.io"
 author:
   name      : Domenico Scarmozzino
   job       : Software and Data Engineer
-  bio       : "Enthusiast performance, responsive design and usability, always looking for the best project and good coffee."
+  bio       : "Life is like riding a bicycle. To keep your balance, you must keep moving."
   thumb     : /images/author.png
   email     :
   url       : http://domesc.github.io
