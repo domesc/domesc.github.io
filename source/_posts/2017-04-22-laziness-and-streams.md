@@ -25,23 +25,7 @@ Deferred evaluation and lazy keyword
 
 In Scala there are two ways of passing parameters to a function, one is by value the other by name. Let's see the difference through some examples:
 
-{% highlight scala %}
-def square(n: Double): Double = {
-  val s = n*n
-  println("The square is "+s)
-  s
-}
-
-def callByValue(x: Double): Unit = {
-  println(“Square by value is ” + x)
-  println(“Square by value is ” + x)
-}
-
-def callByName(x: => Double): Unit = {
-  println(“Square by name is ” + x)
-  println(“Square by name is ” + x)
-}
-{% endhighlight %}
+{% gist domesc/e8aee98f315d406d5d88114d6b54514b %}
 
 When we call `callByValue` and `callByName` functions we see two different results in the REPL
 despite the fact that the body of both does exactly the same thing:
@@ -61,14 +45,7 @@ Square by name is 2 4.0
 
 In `callByValue` the `square` function is evaluated before everything and the evaluated parameter is passed to the body of the function. On the other hand in `callByName` the evaluation is deferred to the point when the parameter is used and every time re-evaluated.
 This shows how in Scala we can defer the evaluation of a function parameter and make it happen later. Wait ... that's awesome, but why re-evaluating every time the parameter? In case we are passing by name a function which takes up a lot of time to evaluate we will repeat the computation twice eating up CPU. The solution is to use the `lazy` keyword, let's see how we can modify `callByName`:
-
-{% highlight scala %}
-def callByName(x: => Double): Unit = {
-  lazy val square = x
-  println(“Square by name is ” + square)
-  println(“Square by name is ” + square)
-}
-{% endhighlight %}
+{% gist domesc/8ddf86261fcc08311031d1fc233348e4 %}
 
 This time if we call the function:
 
