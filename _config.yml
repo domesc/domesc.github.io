@@ -1,12 +1,20 @@
 # Build settings
 permalink   : /blog/:year/:title/
 markdown    : kramdown
+kramdown:
+  input: GFM
 highlighter : pygments
-gems: [jekyll-paginate]
+gems:
+  - jekyll-paginate
+  - jekyll-gist
+
+gist:
+  noscript: false
 
 paginate: 3
 paginate_path: "/blog/page/:num/"
 comments: true
+future: true
 
 source: source
 destination: _site
