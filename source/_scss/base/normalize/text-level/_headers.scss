@@ -6,7 +6,7 @@
 
 @if normalize-get("parts", "text level semantics", "headers") {
 
-	@if normalize-get("options", "explanatory comments") { 
+	@if normalize-get("options", "explanatory comments") {
 
 		@if normalize-get("options", "legacy support for ie7") {
 /**

@@ -12,16 +12,17 @@ categories: scala
 tags:
 
 ---
-
-
 This is the first post of my blog dedicated mostly to programming and maybe some machine learning. As first subject I decided to write about laziness, I'm not speaking of course about the feeling some people have of doing the least work or effort possible, but what laziness means in functional programming, which if we think about, it is kind of the same concept. Indeed laziness in programming consists on avoiding any computation that is not needed right now, but deferring those computations in a later stage.
 Why doing this? Well one of the reason could be performance for example, why using potentially a lot of memory and computational resources for computing something that is not needed yet?
 
 In this post I will show how you can exploit laziness using Scala, a functional programming language running on the JVM.
 
-So, let's start!
+So, let's start!  
+<br/>
 
-##Deferred evaluation and lazy keyword
+Deferred evaluation and lazy keyword
+------------------------------------
+
 In Scala there are two ways of passing parameters to a function, one is by value the other by name. Let's see the difference through some examples:
 
 {% highlight scala %}
@@ -82,7 +83,9 @@ Clearly this time the evaluation of `square(2)` happened only once and that's be
 
 Now that laziness concept is hopefully clear and we saw how this is handled in Scala, we can see another powerful tool which is built upon laziness: the Streams.
 
-##Streams
+Streams
+-------
+
 Since the first year of study in computer science every student has to deal with some sort of collection like lists or arrays. We build a collection of elements which take space in memory and once the allocation is done we can start making operations on the collection like iterating, adding an element etc. But what if we don't want to load all the elements in memory from the beginning? What if we want only to store the type of computations we want to make on the collection without actually applying them straight away?
 Welcome to the `Stream` world. Let's see the difference between a non lazy collection like List and Stream:
 
@@ -122,8 +125,11 @@ res18: Int = 6
 
 At this point a valid question can be raised, since the `Stream` doesn't evaluate all the elements of the collection
 until it is not required, what stop us from creating an infinite `Stream`?
+<br/>
 
-##Infinite Streams
+Infinite Streams
+----------------
+
 The way Scala allows the creation of an infinite `Stream` is quite straight-forward:
 
 {% highlight scala %}
@@ -143,7 +149,6 @@ and this is the `cons` method (which stands for constructor by the way):
 
 {% highlight scala %}
 object cons {
-
     def apply[A](hd: A, tl: => Stream[A]) = new Cons(hd, tl)
 
     def unapply[A](xs: Stream[A]): Option[(A, Stream[A])] = #::.unapply(xs)
@@ -152,6 +157,11 @@ object cons {
 
 From the above code snippets we can extract some of the functional properties of an infinite `Stream`:
 
-1. lazy: as we explained until now and as we can see from the `Stream` constructor, where the tail of the collection is passed by name (so the evaluation is deferred).
-2. recursive: the infinite `Stream` is defined in terms of itself, just look at the `from` method above.
-3. infinite: of course, thing which is possible thanks to the lazy property.
+* *lazy*: as we explained until now and as we can see from the `Stream` constructor, the tail of the collection is passed by name (so the evaluation is deferred).
+* *recursive*: the infinite `Stream` is defined in terms of itself, just look at the `from` method above.
+* *infinite*: of course, which is possible thanks to the lazy property.
+
+
+In conclusion we saw how laziness and streams works in Scala, the post of course doesn't include all the possible
+uses and APIs examples, but it gives you a wide idea on how things works. For more information
+on the `Stream` APIs this is the link to the [Scala Doc](http://www.scala-lang.org/api/2.10.2/#scala.collection.immutable.Stream).
