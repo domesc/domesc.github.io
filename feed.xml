@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>domesc blog</title>
+    <description></description>
+    <link>https://domesc.github.io//</link>
+    <atom:link href="https://domesc.github.io//feed.xml" rel="self" type="application/rss+xml"/>
+    <pubDate>Sat, 13 May 2017 16:33:12 +0200</pubDate>
+    <lastBuildDate>Sat, 13 May 2017 16:33:12 +0200</lastBuildDate>
+    <generator>Jekyll v3.1.1</generator>
+    
+      <item>
+        <title>Laziness and Streams</title>
+        <description>&lt;p&gt;In the real world laziness is the feeling, some people have, of doing the least work or effort possible. In functional programming … well if we think about it, it’s kind of the same concept.
+Indeed, laziness consists in avoiding any computation that is not needed straight away, but deferring it to a later stage.&lt;/p&gt;
+
+&lt;p&gt;One can easily ask: why should I make my life difficult? It turns out that sometime applying this concept to your program can be quite useful.
+In the following paragraphs I will try to go step by step from the basis to some applications of laziness like Streams. Every example in this post and probably in every future post will be written in Scala, a functional programming language running on the JVM, which I use in my current job and which I find simply awesome.&lt;/p&gt;
+
+&lt;p&gt;So let’s start!
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;deferred-evaluation-and-lazy-keyword&quot;&gt;Deferred evaluation and lazy keyword&lt;/h2&gt;
+
+&lt;p&gt;In Scala there are two ways of passing parameters to a function, one is by value the other by name. Understanding the difference between them is the basis so let’s see some examples:&lt;/p&gt;
+
+&lt;script src=&quot;https://gist.github.com/domesc/e8aee98f315d406d5d88114d6b54514b.js&quot;&gt; &lt;/script&gt;
+
+&lt;p&gt;The code above shows a quite important feature of Scala, the possibility to pass a parameter by name through writing the little arrow before the type &lt;code&gt;x: =&amp;gt; Double&lt;/code&gt;. This special syntax will tell Scala compiler to not evaluate immediately the expression passed to &lt;code&gt;callByName&lt;/code&gt; function. Note instead that in &lt;code&gt;callByValue&lt;/code&gt; the parameter has no special syntax, which means it is passed by value like it happens by default in Java for example.&lt;/p&gt;
+
+&lt;p&gt;Now that Scala syntax is clear let’s try to call in the REPL &lt;code&gt;callByValue&lt;/code&gt; and &lt;code&gt;callByName&lt;/code&gt;:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;&lt;span class=&quot;n&quot;&gt;scala&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;callByValue&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;square&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;))&lt;/span&gt;
+&lt;span class=&quot;nc&quot;&gt;The&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;square&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;is&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;4.0&lt;/span&gt;
+&lt;span class=&quot;nc&quot;&gt;Square&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;by&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;is&lt;/span&gt;  &lt;span class=&quot;mf&quot;&gt;4.0&lt;/span&gt;
+&lt;span class=&quot;nc&quot;&gt;Square&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;by&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;is&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;4.0&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;scala&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;callByName&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;square&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;))&lt;/span&gt;
+&lt;span class=&quot;nc&quot;&gt;The&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;square&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;is&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;4.0&lt;/span&gt;
+&lt;span class=&quot;nc&quot;&gt;Square&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;by&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;is&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;4.0&lt;/span&gt;
+&lt;span class=&quot;nc&quot;&gt;The&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;square&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;is&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;4.0&lt;/span&gt;
+&lt;span class=&quot;nc&quot;&gt;Square&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;by&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;is&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;4.0&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;The two functions have the same body but the REPL gives different results. There are two main reasons why this happen:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;the body of both functions contain &lt;code&gt;println&lt;/code&gt; calls, which create side-effects killing the purity of the function (referential transparency property is broken).&lt;/li&gt;
+  &lt;li&gt;in &lt;code&gt;callByValue&lt;/code&gt; the &lt;code&gt;square&lt;/code&gt; function is evaluated before everything and the evaluated parameter is passed to the body of the function. On the other hand in &lt;code&gt;callByName&lt;/code&gt; the evaluation is deferred to the point when the parameter is used and every time re-evaluated.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;The first reason is not the subject of this post so I will not spend time on that, but I strongly recommend you to look for &lt;em&gt;referential transparency&lt;/em&gt;, if you don’t know already what it means. Here we are interested more in the second reason, deferring the parameter until it is used is the definition of laziness!
+There is a problem though, the parameter is re-evaluated every time, and in case we are passing a function by name, which takes up a lot of time to evaluate we will repeat the computation twice eating up CPU.&lt;/p&gt;
+
+&lt;p&gt;Let’s see how we can modify &lt;code&gt;callByName&lt;/code&gt; to avoid the aforementioned problem:&lt;/p&gt;
+
+&lt;script src=&quot;https://gist.github.com/domesc/8ddf86261fcc08311031d1fc233348e4.js&quot;&gt; &lt;/script&gt;
+
+&lt;p&gt;What I did here was to assign the parameter reference to a &lt;code&gt;lazy val&lt;/code&gt;. &lt;code&gt;lazy&lt;/code&gt; keyword is another awesome feature of Scala (missing for example in Java). It still let us deferring the computation, but the first time the evaluation is required the result is cached, so that the computed value can be reused and no further evaluation is needed. The &lt;code&gt;lazy&lt;/code&gt; keyword is a great tool, but it has to be used with some care. The issues that you can incur are described in &lt;a href=&quot;http://docs.scala-lang.org/sips/pending/improved-lazy-val-initialization.html&quot;&gt;SIP-20&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Let’s now come back to our new &lt;code&gt;callByName&lt;/code&gt; implementation and see if I’m saying the truth on the REPL:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;&lt;span class=&quot;n&quot;&gt;scala&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;callByName&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;square&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;))&lt;/span&gt;
+&lt;span class=&quot;nc&quot;&gt;The&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;square&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;is&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;4.0&lt;/span&gt;
+&lt;span class=&quot;nc&quot;&gt;Square&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;by&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;is&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;4.0&lt;/span&gt;
+&lt;span class=&quot;nc&quot;&gt;Square&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;by&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;is&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;4.0&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Clearly this time the evaluation of &lt;code&gt;square(2)&lt;/code&gt; happened only once and that’s because of the &lt;code&gt;lazy val&lt;/code&gt; construct.&lt;/p&gt;
+
+&lt;p&gt;These were all the bits we needed to understand and implement laziness in Scala, next step now is to see a powerful application of it: Streams.&lt;/p&gt;
+
+&lt;h2 id=&quot;streams&quot;&gt;Streams&lt;/h2&gt;
+
+&lt;p&gt;Probably every developer had to deal in his career with some sort of collection like lists or arrays. We build a collection of elements, which take space in memory and once the allocation is done we can start making operations on it, like iterating, adding an element etc. But what if we don’t want to load all the elements in memory from the beginning? What if we want to store only the type of computations we want to make on the collection without actually applying them straight away?
+That is actually what a &lt;code&gt;Stream&lt;/code&gt; does.&lt;/p&gt;
+
+&lt;p&gt;A &lt;code&gt;Stream&lt;/code&gt; can be thought as a lazy &lt;code&gt;List&lt;/code&gt; where the head is evaluated while the tail is not. That can be easily seen in the following code snippet:&lt;/p&gt;
+
+&lt;script src=&quot;https://gist.github.com/domesc/c92c21206ca38175cc3157abaf70def1.js&quot;&gt; &lt;/script&gt;
+
+&lt;p&gt;The above code has been extracted from Scala 2.12 repository, it is probably the simplest way to show how the &lt;code&gt;Stream&lt;/code&gt; constructor take the &lt;code&gt;head&lt;/code&gt; by value and the &lt;code&gt;tail&lt;/code&gt; by name. Let’s prove everything in the REPL:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;&lt;span class=&quot;n&quot;&gt;scala&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;list&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Int&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;in a &lt;code&gt;List&lt;/code&gt; every element is loaded and stored into the collection.
+On the other hand if we create a Stream of elements with &lt;code&gt;Stream.cons&lt;/code&gt;:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;&lt;span class=&quot;n&quot;&gt;scala&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;stream&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Stream&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cons&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Stream&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cons&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Stream&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cons&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Stream&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;empty&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)))&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;stream&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Stream.Cons&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Int&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Stream&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;?)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;there is now a question mark instead of the list of elements we passed to the constructor and this proves the evaluation of the tail is deferred. By the way don’t worry there is a more syntactic sugar way to create a &lt;code&gt;Stream&lt;/code&gt;:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;&lt;span class=&quot;n&quot;&gt;scala&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;stream&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Stream&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;stream&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;scala.collection.immutable.Stream&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Int&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Stream&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;?)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;We have now our new &lt;code&gt;stream&lt;/code&gt; object, what about accessing the third element for example:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;&lt;span class=&quot;n&quot;&gt;scala&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;stream&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;res15&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Int&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;scala&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;stream&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;res16&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;scala.collection.immutable.Stream&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Int&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Stream&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;?)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Did you notice anything? When we accessed the 3rd element Scala evaluated everything until the third index included.&lt;/p&gt;
+
+&lt;p&gt;Streams are also quite flexible since we can do the same kind of operations supported on normal lists like map, filter etc. but in a lazy way:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;&lt;span class=&quot;n&quot;&gt;scala&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;doubled&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;map&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;e&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;doubled&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;scala.collection.immutable.Stream&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Int&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Stream&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;?)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;scala&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;doubled&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;res18&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Int&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;6&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;But we can do even more and create an infinite &lt;code&gt;Stream&lt;/code&gt;.
+&lt;br /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;infinite-streams&quot;&gt;Infinite Streams&lt;/h2&gt;
+
+&lt;p&gt;The way Scala allows the creation of an infinite &lt;code&gt;Stream&lt;/code&gt; is quite straight-forward:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;&lt;span class=&quot;n&quot;&gt;scala&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;infiniteStream&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Stream&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;from&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;infiniteStream&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;scala.collection.immutable.Stream&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Int&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Stream&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;?)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;The code above does nothing but creating a &lt;code&gt;Stream&lt;/code&gt; of integers starting from 1 and increasing by 1. To better
+understand how this is built let’s look at the code !&lt;/p&gt;
+
+&lt;p&gt;Here I paste the implementation of &lt;code&gt;from&lt;/code&gt; method in the &lt;code&gt;Stream&lt;/code&gt; class Scala version 2.12:&lt;/p&gt;
+
+&lt;script src=&quot;https://gist.github.com/domesc/fca6365fb4730627e6793749f0ac8cf6.js&quot;&gt; &lt;/script&gt;
+
+&lt;p&gt;This snippet calls the constructor I showed you before passing the initial value as head of the &lt;code&gt;Stream&lt;/code&gt; and the function itself as tail. If you try to access any index of an infinite &lt;code&gt;Stream&lt;/code&gt; it will always work (or almost always since computer resources are not infinite :D).&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;To summarize a &lt;code&gt;Stream&lt;/code&gt; has three main functional properties:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;em&gt;lazy&lt;/em&gt;: as we explained and as we can see from the &lt;code&gt;Stream&lt;/code&gt; constructor, the tail of the collection is passed by name (so the evaluation is deferred).&lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;recursive&lt;/em&gt;: the infinite &lt;code&gt;Stream&lt;/code&gt; is defined in terms of itself.&lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;infinite&lt;/em&gt;: which is possible thanks to the lazy property.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We saw how laziness and streams work in Scala, but this doesn’t include all the possible
+uses and APIs examples, though it gives you an idea on how things works. For more information
+on the &lt;code&gt;Stream&lt;/code&gt; APIs this is the link to the &lt;a href=&quot;http://www.scala-lang.org/api/2.10.2/#scala.collection.immutable.Stream&quot;&gt;Scala Doc&lt;/a&gt;.&lt;/p&gt;
+</description>
+        <pubDate>Sat, 22 Apr 2017 19:19:20 +0200</pubDate>
+        <link>https://domesc.github.io//laziness-and-streams</link>
+        <guid isPermaLink="true">https://domesc.github.io//laziness-and-streams</guid>
+        
+        
+        <category>scala</category>
+        
+      </item>
+    
+  </channel>
+</rss>
